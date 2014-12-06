@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "stdafx.h"
+#include <math.h>
 
 using namespace std;
 
@@ -52,7 +53,8 @@ public:
 	}
 	bool judge(POINT ptJudge)
 	{
-		if (ptJudge.x > ptStart.x && ptJudge.x < ptEnd.x && ptJudge.y > ptStart.y && ptJudge.y < ptEnd.y)
+		if (ptJudge.x >min(ptStart.x, ptEnd.x) && ptJudge.x <max(ptStart.x, ptEnd.x) &&
+			ptJudge.y > min(ptStart.y, ptEnd.y) && ptJudge.y <  max(ptStart.y, ptEnd.y))
 		{
 			return true;
 		}
@@ -118,7 +120,8 @@ public:
 	}
 	bool judge(POINT ptJudge)
 	{
-		if (ptJudge.x > ptStart.x && ptJudge.x < ptEnd.x && ptJudge.y > ptStart.y && ptJudge.y < ptStart.y + ptEnd.x - ptStart.x)
+		if (ptJudge.x >min(ptStart.x, ptEnd.x) && ptJudge.x <max(ptStart.x, ptEnd.x) &&
+			ptJudge.y > min(ptStart.y, ptStart.y + ptEnd.x - ptStart.x) && ptJudge.y <  max(ptStart.y, ptStart.y + ptEnd.x - ptStart.x))
 		{
 			return true;
 		}
@@ -169,4 +172,63 @@ public:
 
 };
 
+
+class CLine :public CShape
+{
+public:
+	CLine(POINT start, POINT end, COLORREF rgb)
+	{
+		ptStart = start;
+		ptEnd = end;
+		myRGB = rgb;
+	}
+	bool judge(POINT ptJudge)
+	{
+		int thereshold = 15;
+		if (ptStart.x == ptEnd.x)
+		{
+			if (ptJudge.x >ptStart.x - thereshold && ptJudge.x <ptStart.x + thereshold &&
+				ptJudge.y > min(ptStart.y, ptEnd.y) && ptJudge.y <  max(ptStart.y, ptEnd.y))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else if (abs(ptStart.y - ptEnd.y) < thereshold)
+		{
+			if (ptJudge.x >min(ptStart.x, ptEnd.x) && ptJudge.x <max(ptStart.x, ptEnd.x) &&
+				ptJudge.y > ptStart.y - thereshold && ptJudge.y < ptStart.y + thereshold)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else
+		{
+			double yPos = (ptEnd.y - ptStart.y)*(ptJudge.x - ptStart.x) / (ptEnd.x - ptStart.x) + ptStart.y;
+			if (ptJudge.y >= min(ptStart.y, ptEnd.y) && ptJudge.y <=  max(ptStart.y, ptEnd.y) &&
+				abs(yPos - ptJudge.y) < thereshold)
+			{
+				return true;
+			}
+			else
+				return false;
+		}
+	}
+
+	void draw(HDC hdc, bool erase)
+	{
+		CShape::draw(hdc, erase);
+		MoveToEx(hdc, ptStart.x, ptStart.y, NULL);
+		LineTo(hdc, ptEnd.x, ptEnd.y);
+	}
+
+
+};
 

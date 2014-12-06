@@ -26,7 +26,7 @@ INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
 void drawLED(HDC hdc, int x, int y, double length, double width, int num);
 void rePaint(HDC hdc, HWND hWnd);
 int mySelect(POINT pt);
-
+void printCMD(HDC hdc, LPCTSTR text);
 
 
 int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
@@ -128,16 +128,16 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //myArgs
 vector<CShape*> vShape;
 POINT ptStart;
-POINT ptEnd;
-COLORREF myRGB;
-CShape*  pre = new CRect({ 0, 0 }, { 0, 0 }, RGB(255, 255, 255));
+POINT ptPre;
+COLORREF myRGB = RGB(0, 0, 0);
+CShape*  currentShape = NULL;
+CShape*  preShape = new CRect({ 0, 0 }, { 0, 0 }, RGB(255, 255, 255));
 int iSelectObject = 0;
 bool isDragging = false;
 bool isDrawing = false;
-bool drawRect = true;
-bool drawEllispe = false;
+int drawAction = 0;
 bool isShift = false;
-
+LPCTSTR textCMD = TEXT("[MyPaint$]   Hello :) !");
 
 //
 //  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
@@ -183,7 +183,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		hdc = BeginPaint(hWnd, &ps);
 		// TODO: Add any drawing code here...
-
+		
 		rePaint(hdc, hWnd);
 	
 		EndPaint(hWnd, &ps);
@@ -202,72 +202,106 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 		case 1:
 		{
-			SetWindowText(hWnd, TEXT("draw rect"));
-			drawRect = true;
-			drawEllispe = false;
+			textCMD = TEXT("[MyPaint$] Draw a Rectangle !");
+			printCMD(hdc, textCMD);
+			drawAction = 1;
 		}
 			break;
 		case 2:
 		{
-			SetWindowText(hWnd, TEXT("draw ellipse"));
-			drawEllispe = true;
-			drawRect = false;
+			textCMD = TEXT("[MyPaint$] Draw a Ellipse !");
+			printCMD(hdc, textCMD);
+			drawAction = 2;
+		}
+			break;
+		case 8:
+		{
+			textCMD = TEXT("[MyPaint$] Draw a Line !");
+			printCMD(hdc, textCMD);
+			drawAction = 3;
 		}
 			break;
 		case 3:
 		{
-			SetWindowText(hWnd, TEXT("draw black"));
+			textCMD = TEXT("[MyPaint$] Use Black !");
+			printCMD(hdc, textCMD);
 			myRGB = RGB(0, 0, 0);
 		}
 			break;
 		case 4:
 		{
-			SetWindowText(hWnd, TEXT("draw red"));
+			textCMD = TEXT("[MyPaint$] Use Red !");
+			printCMD(hdc, textCMD);
 			myRGB = RGB(255, 0, 0);
 		}
 			break;
 		case 5:
 		{
-			SetWindowText(hWnd, TEXT("draw green"));
+			textCMD = TEXT("[MyPaint$] Use Green !");
+			printCMD(hdc, textCMD);
 			myRGB = RGB(0, 255, 0);
 		}
 			break;
 		case 6:
 		{
-			SetWindowText(hWnd, TEXT("draw blue"));
+			textCMD = TEXT("[MyPaint$] Use Blue !");
+			printCMD(hdc, textCMD);
 			myRGB = RGB(0, 0, 255);
+		}
+			break;
+		case 7:
+		{
+			textCMD = TEXT("[MyPaint$] Moving !");
+			printCMD(hdc, textCMD);
+			drawAction = 5;
 		}
 			break;
 		case -1:
 		{
-			/*pan duan shi fou shift*/
-			if (GetKeyState(VK_SHIFT) & 0x8000)
+			if (drawAction == 5)
 			{
-				isShift = true;
-			}
-			/*pan duan yi dong hai shi hua hua*/
-			if (DragDetect(hWnd, pt))
-			{
-				for (int i = 0; i < vShape.size(); i++)
+				if (DragDetect(hWnd, pt))
 				{
-					if (vShape[i]->judge(pt))
+					for (int i = 0; i < vShape.size(); i++)
 					{
-						isDragging = true;
-						SetWindowText(hWnd, TEXT("dragging~~~~~~~"));
-						iSelectObject = i;
-						break;
+						if (vShape[i]->judge(pt))
+						{
+							isDragging = true;
+							textCMD = TEXT("[MyPaint$] Is Moving !");
+							printCMD(hdc, textCMD);
+							iSelectObject = i;
+							ptPre = pt;
+							break;
+						}
 					}
 				}
-				if (!isDragging)
+				else
 				{
-					isDrawing = true;
-					SetWindowText(hWnd, TEXT("drawing~~~~~~~"));
+					textCMD = TEXT("[MyPaint$]  Not Moving !");
+					printCMD(hdc, textCMD);
 				}
 			}
+			if (drawAction != 5 && drawAction != 0)
+			{
+				if (DragDetect(hWnd, pt))
+				{
+					isDrawing = true;
+					ptStart = pt;
+					textCMD = TEXT("[MyPaint$] Drawing !");
+					printCMD(hdc, textCMD);
+				}
+				else
+				{
+					textCMD = TEXT("[MyPaint$] Not Drawing !");
+					printCMD(hdc, textCMD);
+				}
+			}
+
 		}
 			break;
 		default:
-			SetWindowText(hWnd, TEXT("error!!!!"));
+			textCMD = TEXT("[MyPaint$] Error :X !");
+			printCMD(hdc, textCMD);
 			break;
 		}
 
@@ -279,14 +313,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		hdc = GetDC(hWnd);
 		POINT pt = { LOWORD(lParam), HIWORD(lParam) };
 
+		if (isDrawing)
+		{
+			vShape.push_back(currentShape);
+		}
+
 		isDrawing = false;
 		isDragging = false;
 		isShift = false;
 		
-		//SetWindowText(hWnd, TEXT("draw false"));
-
-		
-
 		ReleaseDC(hWnd, hdc);
 	}
 		break;
@@ -297,7 +332,82 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		if (isDrawing)
 		{
-			
+			if (drawAction == 1)
+			{
+				if (GetKeyState(VK_SHIFT) & 0x8000)
+				{
+					preShape->draw(hdc, true);
+
+					rePaint(hdc, hWnd);
+
+					currentShape = new CSquare(ptStart, pt, myRGB);
+					currentShape->draw(hdc, false);
+					textCMD = TEXT("[MyPaint$] Draw a Suqare !");
+					printCMD(hdc, textCMD);
+					preShape = currentShape;
+
+				}
+				else
+				{
+					preShape->draw(hdc, true);
+
+					rePaint(hdc, hWnd);
+
+					currentShape = new CRect(ptStart, pt, myRGB);
+					currentShape->draw(hdc, false);
+					textCMD = TEXT("[MyPaint$] Draw a Rectangle !");
+					printCMD(hdc, textCMD);
+					preShape = currentShape;
+				}
+			}
+			if (drawAction == 2)
+			{
+				if (GetKeyState(VK_SHIFT) & 0x8000)
+				{
+					preShape->draw(hdc, true);
+
+					rePaint(hdc, hWnd);
+
+					currentShape = new CCircle(ptStart, pt, myRGB);
+					currentShape->draw(hdc, false);
+					textCMD = TEXT("[MyPaint$] Draw a Circle !");
+					printCMD(hdc, textCMD);
+					preShape = currentShape;
+				}
+				else
+				{
+					preShape->draw(hdc, true);
+
+					rePaint(hdc, hWnd);
+
+					currentShape = new CEllipse(ptStart, pt, myRGB);
+					currentShape->draw(hdc, false);
+					textCMD = TEXT("[MyPaint$] Draw a Ellipse !");
+					printCMD(hdc, textCMD);
+					preShape = currentShape;
+				}
+			}
+
+			if (drawAction == 3)
+			{
+				preShape->draw(hdc, true);
+				rePaint(hdc, hWnd);
+				currentShape = new CLine(ptStart, pt, myRGB);
+				currentShape->draw(hdc, false);
+				textCMD = TEXT("[MyPaint$] Draw a Line !");
+				printCMD(hdc, textCMD);
+				preShape = currentShape;
+			}
+
+		}
+
+		if (isDragging)
+		{
+			int deltaX = pt.x - ptPre.x;
+			int deltaY = pt.y - ptPre.y;
+			rePaint(hdc, hWnd);
+			vShape[iSelectObject]->move(hdc, deltaX, deltaY);
+			ptPre = pt;
 		}
 
 
@@ -308,9 +418,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		hdc = GetDC(hWnd);
 		POINT pt = { LOWORD(lParam), HIWORD(lParam) };
+		textCMD = TEXT("[MyPaint$] Clear =¡£= !");
+		printCMD(hdc, textCMD);
+		for (int  i = 0; i <vShape.size(); i++)
+		{
+			vShape[i]->draw(hdc, true);
+		}
 
-
-
+		vShape.clear();
 		ReleaseDC(hWnd, hdc);
 	}
 		break;
@@ -318,8 +433,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		hdc = GetDC(hWnd);
 		POINT pt = { LOWORD(lParam), HIWORD(lParam) };
-
-
 
 		ReleaseDC(hWnd, hdc);
 	}
@@ -552,68 +665,109 @@ void rePaint(HDC hdc, HWND	hWnd)
 	/*command rectangle*/
 	SelectObject(hdc, GetStockObject(NULL_BRUSH));
 	SelectObject(hdc, CreatePen(PS_SOLID, 3, RGB(32, 23, 224)));
-	Rectangle(hdc, 45, 10, 85, 30);
+	Rectangle(hdc, 25, 10, 55, 30);
 
 	/*command ellipse*/
-	SelectObject(hdc, CreatePen(PS_SOLID, 3, RGB(232, 223, 14)));
-	Ellipse(hdc, 125, 10, 165, 30);
+	SelectObject(hdc, CreatePen(PS_SOLID, 3, RGB(0, 223, 255)));
+	Ellipse(hdc, 75, 10, 105, 30);
+
+	/*command line*/
+	SelectObject(hdc, CreatePen(PS_SOLID, 3, RGB(231, 179, 37)));
+	MoveToEx(hdc, 125, 10, NULL);
+	LineTo(hdc, 155, 30);
 
 	/*seperate line*/
-	SelectObject(hdc, CreatePen(PS_SOLID, 3, RGB(223, 23, 178)));
+	SelectObject(hdc, CreatePen(PS_DOT, 1, RGB(223, 23, 178)));
 	MoveToEx(hdc, 200, 0, NULL);
 	LineTo(hdc, 200, 40);
+	MoveToEx(hdc, 300, 0, NULL);
+	LineTo(hdc, 300, 40);
 	MoveToEx(hdc, rectClient.right - 150, 0, NULL);
 	LineTo(hdc, rectClient.right - 150, 40);
+	MoveToEx(hdc, 530, 0, NULL);
+	LineTo(hdc, 530, 40);
+
+	/*move command*/
+	WCHAR temp[100];
+	int len = wsprintf(temp, TEXT("Move"));
+	TextOut(hdc, 235, 13, temp, len);
+
 
 	/*color balck*/
 	SelectObject(hdc, GetStockObject(BLACK_BRUSH));
 	SelectObject(hdc, GetStockObject(BLACK_PEN));
-	Ellipse(hdc, 225, 10, 245, 30);
+	Ellipse(hdc, 325, 10, 345, 30);
 
 	/*color red*/
 	SelectObject(hdc, CreateSolidBrush(RGB(255, 0 ,0)));
 	SelectObject(hdc, CreatePen(PS_SOLID, 1, RGB(255, 0, 0)));
-	Ellipse(hdc, 270, 10, 290, 30);
+	Ellipse(hdc, 370, 10, 390, 30);
 
 	/*color green*/
 	SelectObject(hdc, CreateSolidBrush(RGB(0, 255, 0)));
 	SelectObject(hdc, CreatePen(PS_SOLID, 1, RGB(0, 255, 0)));
-	Ellipse(hdc, 315, 10, 335, 30);
+	Ellipse(hdc, 415, 10, 435, 30);
 
 	/*color blue*/
 	SelectObject(hdc, CreateSolidBrush(RGB(0, 0, 255)));
 	SelectObject(hdc, CreatePen(PS_SOLID, 1, RGB(0, 0, 255)));
-	Ellipse(hdc, 360, 10, 380, 30);
+	Ellipse(hdc, 460, 10, 480, 30);
+
+	/*repaint shapes*/
+	for (int i = 0; i < vShape.size(); i++)
+	{
+		vShape[i]->draw(hdc, false);
+	}
+
+	/*repaint command*/
+	printCMD(hdc, textCMD);
 }
 
 int mySelect(POINT pt)
 {
-	if (pt.x > 45 && pt.x < 85 && pt.y > 10 && pt.y < 30)
+	if (pt.x > 25 && pt.x < 55 && pt.y > 10 && pt.y < 30)
 	{
 		return 1;
 	}
-	else if (pt.x > 125 && pt.x < 165 && pt.y > 10 && pt.y < 30)
+	else if (pt.x > 75 && pt.x < 105 && pt.y > 10 && pt.y < 30)
 	{
 		return 2;
 	}
-	else if (pt.x > 225 && pt.x < 245 && pt.y > 10 && pt.y < 30)
+	else if (pt.x > 325 && pt.x < 345 && pt.y > 10 && pt.y < 30)
 	{
 		return 3;
 	}
-	else if (pt.x > 270 && pt.x < 290 && pt.y > 10 && pt.y < 30)
+	else if (pt.x > 370 && pt.x < 390 && pt.y > 10 && pt.y < 30)
 	{
 		return 4;
 	}
-	else if (pt.x > 315 && pt.x < 335 && pt.y > 10 && pt.y < 30)
+	else if (pt.x > 415 && pt.x < 435 && pt.y > 10 && pt.y < 30)
 	{
 		return 5;
 	}
-	else if (pt.x > 360 && pt.x < 380 && pt.y > 10 && pt.y < 30)
+	else if (pt.x > 460 && pt.x < 480 && pt.y > 10 && pt.y < 30)
 	{
 		return 6;
+	}
+	else if (pt.x > 230 && pt.x < 280 && pt.y > 10 && pt.y < 30)
+	{
+		return 7;
+	}
+	else if (pt.x > 125 && pt.x < 155 && pt.y > 10 && pt.y < 30)
+	{
+		return 8;
 	}
 	else
 	{
 		return -1;
 	}
+}
+
+void printCMD(HDC hdc, LPCTSTR text)
+{
+	WCHAR temp[100];
+	int len = wsprintf(temp, TEXT("                                                             "));
+	TextOut(hdc, 550, 13, temp, len);
+	len = wsprintf(temp, text);
+	TextOut(hdc, 550, 13, temp, len);
 }
