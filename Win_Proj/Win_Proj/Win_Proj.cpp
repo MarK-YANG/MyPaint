@@ -23,7 +23,9 @@ LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
 
 //My declaration of functions
-void  drawLED(HDC hdc, int x, int y, double length, double width, int num);
+void drawLED(HDC hdc, int x, int y, double length, double width, int num);
+void rePaint(HDC hdc, HWND hWnd);
+int mySelect(POINT pt);
 
 
 
@@ -123,6 +125,20 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    return TRUE;
 }
 
+//myArgs
+vector<CShape*> vShape;
+POINT ptStart;
+POINT ptEnd;
+COLORREF myRGB;
+CShape*  pre = new CRect({ 0, 0 }, { 0, 0 }, RGB(255, 255, 255));
+int iSelectObject = 0;
+bool isDragging = false;
+bool isDrawing = false;
+bool drawRect = true;
+bool drawEllispe = false;
+bool isShift = false;
+
+
 //
 //  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
 //
@@ -138,12 +154,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	int wmId, wmEvent;
 	PAINTSTRUCT ps;
 	HDC hdc;
-	static vector<CShape*> vShape;
-	static POINT ptStart;
-	static POINT ptEnd;
-	static POINT ptPre;
-	static bool isDragging = false;
-	static bool isDrawing = false;
+	
 
 	switch (message)
 	{
@@ -173,7 +184,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		hdc = BeginPaint(hWnd, &ps);
 		// TODO: Add any drawing code here...
 
-		
+		rePaint(hdc, hWnd);
 	
 		EndPaint(hWnd, &ps);
 	}
@@ -185,9 +196,80 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		hdc = GetDC(hWnd);
 		POINT pt = { LOWORD(lParam), HIWORD(lParam) };
-
 		ptStart = pt;
-		isDrawing = true;
+		
+		switch (mySelect(pt))
+		{
+		case 1:
+		{
+			SetWindowText(hWnd, TEXT("draw rect"));
+			drawRect = true;
+			drawEllispe = false;
+		}
+			break;
+		case 2:
+		{
+			SetWindowText(hWnd, TEXT("draw ellipse"));
+			drawEllispe = true;
+			drawRect = false;
+		}
+			break;
+		case 3:
+		{
+			SetWindowText(hWnd, TEXT("draw black"));
+			myRGB = RGB(0, 0, 0);
+		}
+			break;
+		case 4:
+		{
+			SetWindowText(hWnd, TEXT("draw red"));
+			myRGB = RGB(255, 0, 0);
+		}
+			break;
+		case 5:
+		{
+			SetWindowText(hWnd, TEXT("draw green"));
+			myRGB = RGB(0, 255, 0);
+		}
+			break;
+		case 6:
+		{
+			SetWindowText(hWnd, TEXT("draw blue"));
+			myRGB = RGB(0, 0, 255);
+		}
+			break;
+		case -1:
+		{
+			/*pan duan shi fou shift*/
+			if (GetKeyState(VK_SHIFT) & 0x8000)
+			{
+				isShift = true;
+			}
+			/*pan duan yi dong hai shi hua hua*/
+			if (DragDetect(hWnd, pt))
+			{
+				for (int i = 0; i < vShape.size(); i++)
+				{
+					if (vShape[i]->judge(pt))
+					{
+						isDragging = true;
+						SetWindowText(hWnd, TEXT("dragging~~~~~~~"));
+						iSelectObject = i;
+						break;
+					}
+				}
+				if (!isDragging)
+				{
+					isDrawing = true;
+					SetWindowText(hWnd, TEXT("drawing~~~~~~~"));
+				}
+			}
+		}
+			break;
+		default:
+			SetWindowText(hWnd, TEXT("error!!!!"));
+			break;
+		}
 
 		ReleaseDC(hWnd, hdc);
 	}
@@ -198,6 +280,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		POINT pt = { LOWORD(lParam), HIWORD(lParam) };
 
 		isDrawing = false;
+		isDragging = false;
+		isShift = false;
+		
+		//SetWindowText(hWnd, TEXT("draw false"));
+
+		
+
+		ReleaseDC(hWnd, hdc);
+	}
+		break;
+	case WM_MOUSEMOVE:
+	{
+		hdc = GetDC(hWnd);
+		POINT pt = { LOWORD(lParam), HIWORD(lParam) };
+
+		if (isDrawing)
+		{
+			
+		}
 
 
 		ReleaseDC(hWnd, hdc);
@@ -218,20 +319,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		hdc = GetDC(hWnd);
 		POINT pt = { LOWORD(lParam), HIWORD(lParam) };
 
-
-
-		ReleaseDC(hWnd, hdc);
-	}
-		break;
-	case WM_MOUSEMOVE:
-	{
-		hdc = GetDC(hWnd);
-		POINT pt = { LOWORD(lParam), HIWORD(lParam) };
-
-		if (isDrawing)
-		{
-			CShape* p = new CRect(ptStart, pt, RGB(255, 0, 0));
-		}
 
 
 		ReleaseDC(hWnd, hdc);
@@ -450,4 +537,83 @@ void  drawLED(HDC hdc, int x, int y, double length, double width, int num)
 	}
 	Polyline(hdc, array, iArrayCount);
 
+}
+
+
+void rePaint(HDC hdc, HWND	hWnd)
+{
+	/*seperate line*/
+	RECT rectClient;
+	GetClientRect(hWnd, &rectClient);
+	MoveToEx(hdc, 0, 40, NULL);
+	SelectObject(hdc, CreatePen(PS_SOLID, 3, RGB(223, 23, 178)));
+	LineTo(hdc, rectClient.right, 40);
+
+	/*command rectangle*/
+	SelectObject(hdc, GetStockObject(NULL_BRUSH));
+	SelectObject(hdc, CreatePen(PS_SOLID, 3, RGB(32, 23, 224)));
+	Rectangle(hdc, 45, 10, 85, 30);
+
+	/*command ellipse*/
+	SelectObject(hdc, CreatePen(PS_SOLID, 3, RGB(232, 223, 14)));
+	Ellipse(hdc, 125, 10, 165, 30);
+
+	/*seperate line*/
+	SelectObject(hdc, CreatePen(PS_SOLID, 3, RGB(223, 23, 178)));
+	MoveToEx(hdc, 200, 0, NULL);
+	LineTo(hdc, 200, 40);
+	MoveToEx(hdc, rectClient.right - 150, 0, NULL);
+	LineTo(hdc, rectClient.right - 150, 40);
+
+	/*color balck*/
+	SelectObject(hdc, GetStockObject(BLACK_BRUSH));
+	SelectObject(hdc, GetStockObject(BLACK_PEN));
+	Ellipse(hdc, 225, 10, 245, 30);
+
+	/*color red*/
+	SelectObject(hdc, CreateSolidBrush(RGB(255, 0 ,0)));
+	SelectObject(hdc, CreatePen(PS_SOLID, 1, RGB(255, 0, 0)));
+	Ellipse(hdc, 270, 10, 290, 30);
+
+	/*color green*/
+	SelectObject(hdc, CreateSolidBrush(RGB(0, 255, 0)));
+	SelectObject(hdc, CreatePen(PS_SOLID, 1, RGB(0, 255, 0)));
+	Ellipse(hdc, 315, 10, 335, 30);
+
+	/*color blue*/
+	SelectObject(hdc, CreateSolidBrush(RGB(0, 0, 255)));
+	SelectObject(hdc, CreatePen(PS_SOLID, 1, RGB(0, 0, 255)));
+	Ellipse(hdc, 360, 10, 380, 30);
+}
+
+int mySelect(POINT pt)
+{
+	if (pt.x > 45 && pt.x < 85 && pt.y > 10 && pt.y < 30)
+	{
+		return 1;
+	}
+	else if (pt.x > 125 && pt.x < 165 && pt.y > 10 && pt.y < 30)
+	{
+		return 2;
+	}
+	else if (pt.x > 225 && pt.x < 245 && pt.y > 10 && pt.y < 30)
+	{
+		return 3;
+	}
+	else if (pt.x > 270 && pt.x < 290 && pt.y > 10 && pt.y < 30)
+	{
+		return 4;
+	}
+	else if (pt.x > 315 && pt.x < 335 && pt.y > 10 && pt.y < 30)
+	{
+		return 5;
+	}
+	else if (pt.x > 360 && pt.x < 380 && pt.y > 10 && pt.y < 30)
+	{
+		return 6;
+	}
+	else
+	{
+		return -1;
+	}
 }

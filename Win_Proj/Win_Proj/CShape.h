@@ -24,7 +24,7 @@ public:
 		}
 		else
 		{
-			SelectObject(hdc, GetStockObject(WHITE_PEN));
+			SelectObject(hdc, CreatePen(PS_SOLID, 3, RGB(255, 255, 255)));
 		}
 	}
 
@@ -131,7 +131,7 @@ public:
 	void draw(HDC hdc, bool erase)
 	{
 		CShape::draw(hdc, erase);
-		Ellipse(hdc, ptStart.x, ptStart.y, ptEnd.x, ptStart.y + ptEnd.x - ptStart.x);
+		Rectangle(hdc, ptStart.x, ptStart.y, ptEnd.x, ptStart.y + ptEnd.x - ptStart.x);
 	}
 
 
