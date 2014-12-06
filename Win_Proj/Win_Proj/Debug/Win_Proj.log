@@ -1,0 +1,24 @@
+﻿Build started 12/6/2014 1:39:53 PM.
+     1>Project "Z:\Desktop\resource\Windows程序设计\Project\Win_Proj\Win_Proj\Win_Proj.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"stdafx.h" /Fp"Debug\Win_Proj.pch" /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt Win_Proj.cpp
+         Win_Proj.cpp
+     1>z:\desktop\resource\windows程序设计\project\win_proj\win_proj\win_proj.cpp(227): warning C4244: '=' : conversion from 'double' to 'LONG', possible loss of data
+     1>z:\desktop\resource\windows程序设计\project\win_proj\win_proj\win_proj.cpp(228): warning C4244: '=' : conversion from 'double' to 'LONG', possible loss of data
+     1>z:\desktop\resource\windows程序设计\project\win_proj\win_proj\win_proj.cpp(229): warning C4244: '=' : conversion from 'double' to 'LONG', possible loss of data
+     1>z:\desktop\resource\windows程序设计\project\win_proj\win_proj\win_proj.cpp(230): warning C4244: '=' : conversion from 'double' to 'LONG', possible loss of data
+     1>z:\desktop\resource\windows程序设计\project\win_proj\win_proj\win_proj.cpp(232): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
+     1>z:\desktop\resource\windows程序设计\project\win_proj\win_proj\win_proj.cpp(234): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
+     1>z:\desktop\resource\windows程序设计\project\win_proj\win_proj\win_proj.cpp(313): warning C4244: 'initializing' : conversion from 'double' to 'LONG', possible loss of data
+       ResourceCompile:
+         C:\Program Files (x86)\Windows Kits\8.1\bin\x86\rc.exe /D _UNICODE /D UNICODE /l"0x0409" /nologo /fo"Debug\Win_Proj.res" Win_Proj.rc 
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"Z:\Desktop\resource\Windows程序设计\Project\Win_Proj\Debug\Win_Proj.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"Z:\Desktop\resource\Windows程序设计\Project\Win_Proj\Debug\Win_Proj.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"Z:\Desktop\resource\Windows程序设计\Project\Win_Proj\Debug\Win_Proj.lib" /MACHINE:X86 Debug\Win_Proj.res
+         Debug\stdafx.obj
+         Debug\Win_Proj.obj
+         Win_Proj.vcxproj -> Z:\Desktop\resource\Windows程序设计\Project\Win_Proj\Debug\Win_Proj.exe
+     1>Done Building Project "Z:\Desktop\resource\Windows程序设计\Project\Win_Proj\Win_Proj\Win_Proj.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:01.53
